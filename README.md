@@ -115,7 +115,7 @@ Coverage includes:
 ### Postman Collection
 
 A ready-to-use **Postman collection** is included in the project root:
- `OrderMgmt_Auto.postman_collection.json`
+ `OrderMgmt.postman_collection.json`
 
 This collection automatically stores variables (`last_order_id`, `client_id`) between requests, enabling a full API flow test.
 

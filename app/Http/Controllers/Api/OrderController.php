@@ -42,4 +42,24 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
+
+    public function listByClient(Request $request, int $id)
+    {
+        // Enforce same-tenant
+        $authClientId = $request->user()->client_id;
+        abort_if($id !== $authClientId, 404);
+
+        // per_page: default 15, min 1, max 100
+        $perPage = (int) $request->query('per_page', 15);
+        $perPage = max(1, min($perPage, 100));
+
+        $orders = Order::query()
+            ->forClient($authClientId)
+            ->with('items')
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        // Resource collection works with paginator (adds meta/links)
+        return OrderResource::collection($orders);
+    }
 }

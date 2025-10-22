@@ -18,21 +18,19 @@ class InvoiceController extends Controller
     {
         $clientId = $request->user()->client_id;
 
-        // Anti-IDOR: the client_id must match the authenticated user
-        $order = \App\Models\Order::query()->forClient($clientId)->findOrFail($id);
+        $order = Order::query()
+            ->forClient($clientId)
+            ->findOrFail($id);
 
-        $invoice = \App\Models\Invoice::query()->where('order_id', $order->id)->first();
+        $invoice = Invoice::query()
+            ->where('order_id', $order->id)
+            ->first();
 
         if (! $invoice) {
-            // The invoice has not been generated yet but the order exists
-            return response()->json([
-                'status'  => 'pending',
-                'message' => 'Invoice not generated yet. Please retry shortly.',
-                'order_id' => $order->id,
-            ], 202);
+            abort(404);
         }
 
-        return new \App\Http\Resources\InvoiceResource($invoice);
+        return new InvoiceResource($invoice);
     }
 
     public function status(Request $request, int $id)

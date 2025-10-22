@@ -1,0 +1,155 @@
+{
+  "info": {
+    "_postman_id": "b9999999-c111-4ddd-aaaa-eeeeffff1111",
+    "name": "OrderMgmt API (Auto-Sequential)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Automated Postman collection to test the Order Management API (Laravel 11). Automatically saves client_id and last_order_id for subsequent requests."
+  },
+  "item": [
+    {
+      "name": "Create Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"name\": \"Item A\", \"quantity\": 2, \"unit_price\": 10.50 },\n    { \"name\": \"Item B\", \"quantity\": 1, \"unit_price\": 99.99 }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/orders",
+          "host": ["{{base_url}}"],
+          "path": ["api", "orders"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 201 Created', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "let data;",
+              "try { data = pm.response.json().data; } catch(e) { data = {}; }",
+              "",
+              "if (data.id) {",
+              "  pm.collectionVariables.set('last_order_id', data.id);",
+              "  console.log('Saved last_order_id =', data.id);",
+              "}",
+              "if (data.client_id) {",
+              "  pm.collectionVariables.set('client_id', data.client_id);",
+              "  console.log('Saved client_id =', data.client_id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Order (last created)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/orders/{{last_order_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "orders", "{{last_order_id}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200 OK', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "let data;",
+              "try { data = pm.response.json().data; } catch(e) { data = {}; }",
+              "pm.test('Has items array', function() {",
+              "  pm.expect(Array.isArray(data.items)).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "List Orders by Client",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/clients/{{client_id}}/orders",
+          "host": ["{{base_url}}"],
+          "path": ["api", "clients", "{{client_id}}", "orders"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200 OK', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "let res;",
+              "try { res = pm.response.json(); } catch(e) { res = {}; }",
+              "pm.test('Response has data array', function() {",
+              "  pm.expect(Array.isArray(res.data)).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Invoice (for last order)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/orders/{{last_order_id}}/invoice",
+          "host": ["{{base_url}}"],
+          "path": ["api", "orders", "{{last_order_id}}", "invoice"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Invoice returns 200 or 404 (if job still queued)', function () {",
+              "  pm.expect([200,404]).to.include(pm.response.code);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://order-mgmt.test" },
+    { "key": "token", "value": "" },
+    { "key": "client_id", "value": "" },
+    { "key": "last_order_id", "value": "" }
+  ]
+}
